@@ -31,10 +31,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import dev.easonhuang.heartwood.data.DashboardPreferences
 import dev.easonhuang.heartwood.data.ExportManager
 import dev.easonhuang.heartwood.data.GoalsRepository
 import dev.easonhuang.heartwood.data.HealthConnectManager
 import dev.easonhuang.heartwood.data.Metric
+import dev.easonhuang.heartwood.ui.dashboard.CustomizeDashboardScreen
 import dev.easonhuang.heartwood.ui.dashboard.DashboardScreen
 import dev.easonhuang.heartwood.ui.detail.DetailScreen
 import dev.easonhuang.heartwood.ui.onboarding.LoadingScreen
@@ -58,6 +60,7 @@ fun HeartwoodRoot(
     manager: HealthConnectManager,
     goalsRepo: GoalsRepository,
     exporter: ExportManager,
+    dashboardPrefs: DashboardPreferences,
     deepLinkMetric: String? = null,
     onDeepLinkConsumed: () -> Unit = {},
 ) {
@@ -141,7 +144,7 @@ fun HeartwoodRoot(
         !hasData -> OnboardingScreen(onConnect = ::startSetup)
         else -> {
             MainNav(
-                manager, goalsRepo, exporter,
+                manager, goalsRepo, exporter, dashboardPrefs,
                 onManagePermissions = ::manageAccess,
                 deepLinkMetric = deepLinkMetric,
                 onDeepLinkConsumed = onDeepLinkConsumed,
@@ -155,6 +158,7 @@ private fun MainNav(
     manager: HealthConnectManager,
     goalsRepo: GoalsRepository,
     exporter: ExportManager,
+    dashboardPrefs: DashboardPreferences,
     onManagePermissions: () -> Unit,
     deepLinkMetric: String? = null,
     onDeepLinkConsumed: () -> Unit = {},
@@ -206,9 +210,18 @@ private fun MainNav(
             composable(Dest.TODAY.route) {
                 DashboardScreen(
                     manager = manager,
+                    dashboardPrefs = dashboardPrefs,
                     bottomInset = bottomInset,
                     onOpenMetric = { metric -> navController.navigate("detail/${metric.key}") },
                     onManagePermissions = onManagePermissions,
+                    onCustomize = { navController.navigate("customize") },
+                )
+            }
+            composable("customize") {
+                CustomizeDashboardScreen(
+                    dashboardPrefs = dashboardPrefs,
+                    bottomInset = bottomInset,
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable(Dest.SUMMARY.route) {
