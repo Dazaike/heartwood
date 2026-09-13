@@ -28,3 +28,7 @@ captures/
 
 # IDE
 kls_database.db
+
+# Local plans & temporary files
+*plan*.md
+*.png

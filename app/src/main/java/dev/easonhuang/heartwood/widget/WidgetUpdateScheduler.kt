@@ -9,12 +9,12 @@ import java.util.concurrent.TimeUnit
 object WidgetUpdateScheduler {
     private const val WORK_NAME = "heartwood_widget_refresh"
 
-    fun ensureScheduled(context: Context) {
-        val request = PeriodicWorkRequestBuilder<WidgetUpdateWorker>(30, TimeUnit.MINUTES)
+    fun schedule(context: Context, intervalMinutes: Long) {
+        val request = PeriodicWorkRequestBuilder<WidgetUpdateWorker>(intervalMinutes.coerceAtLeast(15), TimeUnit.MINUTES)
             .build()
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.UPDATE,
             request,
         )
     }

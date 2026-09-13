@@ -35,29 +35,37 @@ enum class MetricKind {
 enum class Metric(
     val key: String,
     val title: String,
-    val unit: String,
+    val metricUnit: String,
+    val imperialUnit: String,
     val kind: MetricKind,
     val accent: Color,
     val icon: ImageVector,
 ) {
-    STEPS("steps", "Steps", "steps", MetricKind.DAILY_TOTAL, Color(0xFF4CAF50), Icons.Rounded.DirectionsWalk),
-    DISTANCE("distance", "Distance", "km", MetricKind.DAILY_TOTAL, Color(0xFF26A69A), Icons.Rounded.Route),
-    ACTIVE_CALORIES("active_calories", "Active energy", "kcal", MetricKind.DAILY_TOTAL, Color(0xFFFF7043), Icons.Rounded.LocalFireDepartment),
-    TOTAL_CALORIES("total_calories", "Total energy", "kcal", MetricKind.DAILY_TOTAL, Color(0xFFEF5350), Icons.Rounded.Bolt),
-    FLOORS("floors", "Floors climbed", "floors", MetricKind.DAILY_TOTAL, Color(0xFF8D6E63), Icons.Rounded.Stairs),
-    EXERCISE("exercise", "Exercise", "min", MetricKind.DAILY_TOTAL, Color(0xFF7E57C2), Icons.Rounded.DirectionsRun),
-    HYDRATION("hydration", "Hydration", "L", MetricKind.DAILY_TOTAL, Color(0xFF42A5F5), Icons.Rounded.WaterDrop),
-    HEART_RATE("heart_rate", "Heart rate", "bpm", MetricKind.LATEST, Color(0xFFEC407A), Icons.Rounded.MonitorHeart),
-    RESTING_HR("resting_heart_rate", "Resting heart rate", "bpm", MetricKind.LATEST, Color(0xFFE91E63), Icons.Rounded.Favorite),
-    HRV("hrv", "Heart rate variability", "ms", MetricKind.LATEST, Color(0xFFAB47BC), Icons.Rounded.Timeline),
-    SLEEP("sleep", "Sleep", "h", MetricKind.LATEST, Color(0xFF5C6BC0), Icons.Rounded.Bedtime),
-    OXYGEN("oxygen", "Blood oxygen", "%", MetricKind.LATEST, Color(0xFF29B6F6), Icons.Rounded.Air),
-    RESPIRATORY("respiratory", "Respiratory rate", "br/min", MetricKind.LATEST, Color(0xFF66BB6A), Icons.Rounded.Air),
-    VO2MAX("vo2max", "VO₂ max", "mL/kg/min", MetricKind.LATEST, Color(0xFF26C6DA), Icons.Rounded.Speed),
-    WEIGHT("weight", "Weight", "kg", MetricKind.LATEST, Color(0xFF78909C), Icons.Rounded.MonitorWeight),
-    HEIGHT("height", "Height", "cm", MetricKind.LATEST, Color(0xFF90A4AE), Icons.Rounded.Height),
-    BLOOD_PRESSURE("blood_pressure", "Blood pressure", "mmHg", MetricKind.LATEST, Color(0xFFD4504E), Icons.Rounded.Bloodtype),
-    BLOOD_GLUCOSE("blood_glucose", "Blood glucose", "mg/dL", MetricKind.LATEST, Color(0xFFFFA726), Icons.Rounded.Bloodtype);
+    STEPS("steps", "Steps", "steps", "steps", MetricKind.DAILY_TOTAL, Color(0xFF4CAF50), Icons.Rounded.DirectionsWalk),
+    DISTANCE("distance", "Distance", "km", "mi", MetricKind.DAILY_TOTAL, Color(0xFF26A69A), Icons.Rounded.Route),
+    ACTIVE_CALORIES("active_calories", "Active energy", "kcal", "kcal", MetricKind.DAILY_TOTAL, Color(0xFFFF7043), Icons.Rounded.LocalFireDepartment),
+    TOTAL_CALORIES("total_calories", "Total energy", "kcal", "kcal", MetricKind.DAILY_TOTAL, Color(0xFFEF5350), Icons.Rounded.Bolt),
+    FLOORS("floors", "Floors climbed", "floors", "floors", MetricKind.DAILY_TOTAL, Color(0xFF8D6E63), Icons.Rounded.Stairs),
+    EXERCISE("exercise", "Exercise", "min", "min", MetricKind.DAILY_TOTAL, Color(0xFF7E57C2), Icons.Rounded.DirectionsRun),
+    HYDRATION("hydration", "Hydration", "L", "fl oz", MetricKind.DAILY_TOTAL, Color(0xFF42A5F5), Icons.Rounded.WaterDrop),
+    HEART_RATE("heart_rate", "Heart rate", "bpm", "bpm", MetricKind.LATEST, Color(0xFFEC407A), Icons.Rounded.MonitorHeart),
+    RESTING_HR("resting_heart_rate", "Resting heart rate", "bpm", "bpm", MetricKind.LATEST, Color(0xFFE91E63), Icons.Rounded.Favorite),
+    HRV("hrv", "Heart rate variability", "ms", "ms", MetricKind.LATEST, Color(0xFFAB47BC), Icons.Rounded.Timeline),
+    SLEEP("sleep", "Sleep", "h", "h", MetricKind.LATEST, Color(0xFF5C6BC0), Icons.Rounded.Bedtime),
+    OXYGEN("oxygen", "Blood oxygen", "%", "%", MetricKind.LATEST, Color(0xFF29B6F6), Icons.Rounded.Air),
+    RESPIRATORY("respiratory", "Respiratory rate", "br/min", "br/min", MetricKind.LATEST, Color(0xFF66BB6A), Icons.Rounded.Air),
+    VO2MAX("vo2max", "VO₂ max", "mL/kg/min", "mL/kg/min", MetricKind.LATEST, Color(0xFF26C6DA), Icons.Rounded.Speed),
+    WEIGHT("weight", "Weight", "kg", "lbs", MetricKind.LATEST, Color(0xFF78909C), Icons.Rounded.MonitorWeight),
+    HEIGHT("height", "Height", "cm", "in", MetricKind.LATEST, Color(0xFF90A4AE), Icons.Rounded.Height),
+    BLOOD_PRESSURE("blood_pressure", "Blood pressure", "mmHg", "mmHg", MetricKind.LATEST, Color(0xFFD4504E), Icons.Rounded.Bloodtype),
+    BLOOD_GLUCOSE("blood_glucose", "Blood glucose", "mg/dL", "mg/dL", MetricKind.LATEST, Color(0xFFFFA726), Icons.Rounded.Bloodtype);
+
+    val unit: String get() = imperialUnit
+
+    fun unit(system: UnitSystem): String = when (system) {
+        UnitSystem.IMPERIAL -> imperialUnit
+        UnitSystem.METRIC -> metricUnit
+    }
 
     companion object {
         fun fromKey(key: String): Metric? = entries.firstOrNull { it.key == key }

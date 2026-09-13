@@ -46,7 +46,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.background
 import dev.easonhuang.heartwood.data.GoalsRepository
-import dev.easonhuang.heartwood.data.HealthConnectManager
+import dev.easonhuang.heartwood.data.UnitPreferences
+import dev.easonhuang.heartwood.data.HealthDataSource
 import dev.easonhuang.heartwood.data.WeeklyStat
 import dev.easonhuang.heartwood.data.formatValue
 import dev.easonhuang.heartwood.ui.components.BarChart
@@ -56,11 +57,12 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SummaryScreen(
-    manager: HealthConnectManager,
+    manager: HealthDataSource,
     goalsRepo: GoalsRepository,
+    unitPrefs: UnitPreferences,
     bottomInset: androidx.compose.ui.unit.Dp,
 ) {
-    val vm: SummaryViewModel = viewModel(factory = SummaryViewModel.factory(manager, goalsRepo))
+    val vm: SummaryViewModel = viewModel(factory = SummaryViewModel.factory(manager, goalsRepo, unitPrefs))
     val state by vm.state.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     var editing by remember { mutableStateOf<WeeklyStat?>(null) }
@@ -129,7 +131,7 @@ private fun WeeklyCard(stat: WeeklyStat, onEdit: () -> Unit) {
                 Column(Modifier.weight(1f)) {
                     Text(stat.metric.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
-                        "${stat.metric.formatValue(stat.thisWeekAvg)} / ${stat.metric.formatValue(stat.goal)} ${stat.metric.unit} avg/day",
+                        "${stat.metric.formatValue(stat.thisWeekAvg)} / ${stat.metric.formatValue(stat.goal)} ${stat.unit} avg/day",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

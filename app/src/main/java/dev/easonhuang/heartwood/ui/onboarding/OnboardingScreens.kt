@@ -37,7 +37,7 @@ fun LoadingScreen() {
 }
 
 @Composable
-fun OnboardingScreen(onConnect: () -> Unit) {
+fun OnboardingScreen(onConnect: () -> Unit, sourceName: String = "Health Connect") {
     val accent = MaterialTheme.colorScheme.primary
     Column(
         Modifier.fillMaxSize().padding(32.dp),
@@ -56,7 +56,7 @@ fun OnboardingScreen(onConnect: () -> Unit) {
             fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         Spacer(Modifier.height(12.dp))
         Text(
-            "A private, open-source window into your Health Connect data. Heartwood only reads, " +
+            "A private, open-source window into your $sourceName data. Heartwood only reads, " +
                 "nothing ever leaves your device.",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -64,7 +64,7 @@ fun OnboardingScreen(onConnect: () -> Unit) {
         )
         Spacer(Modifier.height(36.dp))
         Button(onClick = onConnect, modifier = Modifier.fillMaxWidth().height(52.dp)) {
-            Text("Connect Health Connect", style = MaterialTheme.typography.titleMedium)
+            Text("Connect $sourceName", style = MaterialTheme.typography.titleMedium)
         }
     }
 }
@@ -91,6 +91,32 @@ fun UnavailableScreen(onInstall: () -> Unit) {
         Spacer(Modifier.height(28.dp))
         Button(onClick = onInstall, modifier = Modifier.fillMaxWidth().height(52.dp)) {
             Text("Get Health Connect")
+        }
+    }
+}
+
+@Composable
+fun SamsungHealthErrorScreen(message: String, onRetry: () -> Unit) {
+    Column(
+        Modifier.fillMaxSize().padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(Icons.Rounded.HealthAndSafety, null, tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(72.dp))
+        Spacer(Modifier.height(24.dp))
+        Text("Samsung Health unavailable", style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(12.dp))
+        Text(
+            message,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(28.dp))
+        Button(onClick = onRetry, modifier = Modifier.fillMaxWidth().height(52.dp)) {
+            Text("Try again")
         }
     }
 }

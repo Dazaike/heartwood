@@ -74,7 +74,7 @@ fun MetricCard(summary: MetricSummary, onClick: () -> Unit, modifier: Modifier =
                 if (!locked && summary.hasData) {
                     Spacer(Modifier.size(4.dp))
                     Text(
-                        text = summary.metric.unit,
+                        text = summary.unit,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 4.dp),
@@ -86,7 +86,7 @@ fun MetricCard(summary: MetricSummary, onClick: () -> Unit, modifier: Modifier =
                 Sparkline(summary.spark, accent, Modifier.fillMaxWidth().height(28.dp))
             } else {
                 Text(
-                    text = if (locked) "Tap to grant access" else (summary.caption ?: ""),
+                    text = if (locked) (summary.caption ?: "Tap to grant access") else (summary.caption ?: ""),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,

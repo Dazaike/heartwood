@@ -34,9 +34,15 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background,
                 ) {
                     HeartwoodRoot(
-                        manager = app.healthConnect,
+                        healthConnect = app.healthConnect,
+                        samsungHealth = app.samsungHealth,
                         goalsRepo = app.goals,
                         exporter = app.exporter,
+                        dashboardLayout = app.dashboardLayout,
+                        widgetPrefs = app.widgetPrefs,
+                        mcpPrefs = app.mcpPrefs,
+                        dataSourcePrefs = app.dataSourcePrefs,
+                        unitPrefs = app.unitPrefs,
                         deepLinkMetric = deepLinkMetric,
                         onDeepLinkConsumed = { deepLinkMetric = null },
                     )

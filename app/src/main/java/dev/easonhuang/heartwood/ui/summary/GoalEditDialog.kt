@@ -34,14 +34,14 @@ fun GoalEditDialog(
         title = { Text("${stat.metric.title} goal") },
         text = {
             Column {
-                Text("Daily target in ${stat.metric.unit}")
+                Text("Daily target in ${stat.unit}")
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it.filter { c -> c.isDigit() || c == '.' } },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    suffix = { Text(stat.metric.unit) },
+                    suffix = { Text(stat.unit) },
                 )
             }
         },

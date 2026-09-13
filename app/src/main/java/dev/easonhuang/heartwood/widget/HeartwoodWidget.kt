@@ -40,7 +40,7 @@ private val WIDGET_METRICS = listOf(
 class HeartwoodWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val manager = (context.applicationContext as HeartwoodApp).healthConnect
+        val manager = (context.applicationContext as HeartwoodApp).activeDataSource()
         val summaries = if (manager.isAvailable) {
             runCatching { manager.readDashboard() }.getOrDefault(emptyList())
         } else emptyList()
@@ -121,7 +121,7 @@ private fun Tile(tile: MetricSummary, modifier: GlanceModifier) {
             )
             Spacer(GlanceModifier.width(3.dp))
             Text(
-                text = tile.metric.unit,
+                text = tile.unit,
                 style = TextStyle(color = GlanceTheme.colors.onSecondaryContainer, fontSize = 11.sp),
             )
         }

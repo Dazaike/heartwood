@@ -1,9 +1,8 @@
 # Heartwood
 
-A private, **read-only** [Health Connect](https://developer.android.com/health-connect)
-viewer for Android, built with Jetpack Compose and Material You. Heartwood shows the health
-and fitness data already on your device, beautifully, and without sending a single byte
-anywhere.
+A private, **read-only** Android health-data viewer for [Health Connect](https://developer.android.com/health-connect)
+or, optionally, the Samsung Health app. Heartwood shows the health and fitness data already on
+your device, beautifully, and without sending a single byte anywhere.
 
 > No accounts. No network permission. No trackers. Just your data, on your device.
 
@@ -16,11 +15,12 @@ anywhere.
   week-over-week trends.
 - **Home-screen widgets**, key metrics, dynamically themed (Glance + Material 3).
 - **Export**, save your accessible data to CSV or JSON via the system file picker.
+- **Samsung Health (optional)**, choose to read directly from the Samsung Health app instead of Health Connect, in Settings.
 
 ## Tech
 
 - Kotlin, Jetpack Compose, Material 3 (dynamic color)
-- `androidx.health.connect:connect-client` for all reads
+- `androidx.health.connect:connect-client` and Samsung Health Data SDK for on-device reads
 - `androidx.glance` widgets, WorkManager for periodic refresh
 - DataStore for goals
 - `minSdk 30`, `targetSdk 36`
@@ -72,8 +72,10 @@ for the `fdroiddata` repo is in [docs/fdroid-metadata-template.yml](docs/fdroid-
 
 ## Privacy
 
-Heartwood requests only Health Connect **read** permissions, holds no network permission, and
-never transmits data. You control which data types it can read from Health Connect at any time.
+Heartwood requests only **read** permissions, holds no network permission, and never transmits
+data. You control which data types it can read from Health Connect at any time. The optional
+Samsung Health path talks only to the Samsung Health app on-device via its SDK, never the network,
+just like the Health Connect path.
 
 ## License
 

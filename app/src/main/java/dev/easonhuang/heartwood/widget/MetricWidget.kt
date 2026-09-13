@@ -10,9 +10,10 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.glance.GlanceId
-import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
+import androidx.glance.GlanceModifier
+import kotlinx.coroutines.flow.first
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.LocalSize
@@ -70,12 +71,14 @@ class MetricWidget : GlanceAppWidget() {
         suspend fun refreshData(context: Context, id: GlanceId) {
             val metricKey = getAppWidgetState(context, PreferencesGlanceStateDefinition, id)[METRIC_KEY]
             val metric = Metric.fromKey(metricKey ?: "") ?: return
-            val manager = (context.applicationContext as HeartwoodApp).healthConnect
+            val app = context.applicationContext as HeartwoodApp
+            val manager = app.activeDataSource()
+            val unitSystem = app.unitPrefs.unitSystem.first()
             val granted = manager.isGranted(metric)
-            val detail = if (granted) runCatching { manager.readDetail(metric) }.getOrNull() else null
+            val detail = if (granted) runCatching { manager.readDetail(metric, unitSystem) }.getOrNull() else null
             val value = when {
                 detail == null -> "-"
-                metric.kind == MetricKind.DAILY_TOTAL -> "${detail.headline} ${metric.unit}"
+                metric.kind == MetricKind.DAILY_TOTAL -> "${detail.headline} ${detail.unit}"
                 else -> detail.headline
             }
             val points = detail?.points?.map { it.value } ?: emptyList()

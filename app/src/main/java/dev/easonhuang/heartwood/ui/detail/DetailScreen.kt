@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -26,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -37,9 +39,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.background
-import dev.easonhuang.heartwood.data.HealthConnectManager
+import dev.easonhuang.heartwood.data.HealthDataSource
 import dev.easonhuang.heartwood.data.Metric
 import dev.easonhuang.heartwood.data.MetricDetail
+import dev.easonhuang.heartwood.data.UnitPreferences
 import dev.easonhuang.heartwood.data.MetricKind
 import dev.easonhuang.heartwood.data.RecordRow
 import dev.easonhuang.heartwood.ui.DetailViewModel
@@ -49,15 +52,17 @@ import dev.easonhuang.heartwood.ui.components.LineChart
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(
-    manager: HealthConnectManager,
+    manager: HealthDataSource,
     metric: Metric,
+    unitPrefs: UnitPreferences,
     onBack: () -> Unit,
 ) {
     val vm: DetailViewModel = viewModel(
         key = metric.key,
-        factory = DetailViewModel.factory(manager, metric),
+        factory = DetailViewModel.factory(manager, metric, unitPrefs),
     )
     val detail by vm.detail.collectAsStateWithLifecycle()
+    val refreshing by vm.refreshing.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -67,6 +72,15 @@ fun DetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = vm::refresh) {
+                        if (refreshing) {
+                            CircularProgressIndicator(Modifier.padding(4.dp), strokeWidth = 2.dp)
+                        } else {
+                            Icon(Icons.Rounded.Refresh, contentDescription = "Refresh")
+                        }
                     }
                 },
             )
@@ -79,24 +93,30 @@ fun DetailScreen(
             }
             return@Scaffold
         }
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValuesFrom(inner),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+        PullToRefreshBox(
+            isRefreshing = refreshing,
+            onRefresh = vm::refresh,
+            modifier = Modifier.fillMaxSize().padding(top = inner.calculateTopPadding()),
         ) {
-            item { HeaderCard(d) }
-            item { ChartCard(d) }
-            if (d.stats.isNotEmpty()) item { StatsCard(d) }
-            if (d.recent.isNotEmpty()) {
-                item {
-                    Text(
-                        "Recent records",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                    )
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValuesFrom(inner),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                item { HeaderCard(d) }
+                item { ChartCard(d) }
+                if (d.stats.isNotEmpty()) item { StatsCard(d) }
+                if (d.recent.isNotEmpty()) {
+                    item {
+                        Text(
+                            "Recent records",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(horizontal = 20.dp),
+                        )
+                    }
+                    items(d.recent) { row -> RecordItem(row) }
+                    item { Spacer(Modifier.height(24.dp)) }
                 }
-                items(d.recent) { row -> RecordItem(row) }
-                item { Spacer(Modifier.height(24.dp)) }
             }
         }
     }

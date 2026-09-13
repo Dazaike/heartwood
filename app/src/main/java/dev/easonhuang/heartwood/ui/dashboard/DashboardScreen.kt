@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,7 +28,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import dev.easonhuang.heartwood.data.HealthConnectManager
+import dev.easonhuang.heartwood.data.HealthDataSource
+import dev.easonhuang.heartwood.data.DashboardLayoutRepository
+import dev.easonhuang.heartwood.data.UnitPreferences
 import dev.easonhuang.heartwood.data.Metric
 import dev.easonhuang.heartwood.ui.DashboardViewModel
 import dev.easonhuang.heartwood.ui.components.MetricCard
@@ -35,12 +38,15 @@ import dev.easonhuang.heartwood.ui.components.MetricCard
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
-    manager: HealthConnectManager,
+    manager: HealthDataSource,
+    layoutRepo: DashboardLayoutRepository,
+    unitPrefs: UnitPreferences,
     bottomInset: androidx.compose.ui.unit.Dp,
     onOpenMetric: (Metric) -> Unit,
     onManagePermissions: () -> Unit,
+    onCustomize: () -> Unit,
 ) {
-    val vm: DashboardViewModel = viewModel(factory = DashboardViewModel.factory(manager))
+    val vm: DashboardViewModel = viewModel(factory = DashboardViewModel.factory(manager, layoutRepo, unitPrefs))
     val summaries by vm.summaries.collectAsStateWithLifecycle()
     val refreshing by vm.refreshing.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -51,6 +57,9 @@ fun DashboardScreen(
             LargeTopAppBar(
                 title = { Text("Heartwood") },
                 actions = {
+                    IconButton(onClick = onCustomize) {
+                        Icon(Icons.Rounded.Tune, contentDescription = "Customize dashboard")
+                    }
                     IconButton(onClick = vm::refresh) {
                         if (refreshing) {
                             CircularProgressIndicator(Modifier.padding(4.dp), strokeWidth = 2.dp)
@@ -68,23 +77,29 @@ fun DashboardScreen(
             // initial load handled by spinner in app bar; keep grid space empty
             return@Scaffold
         }
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(
-                start = 16.dp, end = 16.dp,
-                top = inner.calculateTopPadding(),
-                bottom = bottomInset + 24.dp,
-            ),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+        PullToRefreshBox(
+            isRefreshing = refreshing,
+            onRefresh = vm::refresh,
+            modifier = Modifier.fillMaxSize().padding(top = inner.calculateTopPadding()),
         ) {
-            items(data, key = { it.metric.key }) { summary ->
-                MetricCard(
-                    summary = summary,
-                    onClick = {
-                        if (summary.granted) onOpenMetric(summary.metric) else onManagePermissions()
-                    },
-                )
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(
+                    start = 16.dp, end = 16.dp,
+                    top = 16.dp,
+                    bottom = bottomInset + 24.dp,
+                ),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                items(data, key = { it.metric.key }) { summary ->
+                    MetricCard(
+                        summary = summary,
+                        onClick = {
+                            if (summary.granted) onOpenMetric(summary.metric) else onManagePermissions()
+                        },
+                    )
+                }
             }
         }
     }

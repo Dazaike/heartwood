@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("kotlin-parcelize")
 }
 
 // Optional release signing. Provide keystore.properties (gitignored) or env vars in CI.
@@ -114,4 +115,7 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.nanohttpd)
+    implementation(files("libs/samsung-health-data-api.aar"))
+    implementation("com.google.code.gson:gson:2.13.2")
 }
