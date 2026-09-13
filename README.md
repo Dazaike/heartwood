@@ -14,21 +14,24 @@ your device, beautifully, and without sending a single byte anywhere.
 - **Weekly summary**, daily averages vs. goals you set, with progress rings and
   week-over-week trends.
 - **Home-screen widgets**, key metrics, dynamically themed (Glance + Material 3).
-- **Export**, save your accessible data to CSV or JSON via the system file picker.
-- **Samsung Health (optional)**, choose to read directly from the Samsung Health app instead of Health Connect, in Settings.
-
+- **Export & AI Share**, export data to CSV/JSON via file picker, or export formatted Markdown directly to your AI assistant of choice via the Android system share sheet.
+- **Unit System**, toggle between Imperial (miles, lbs, in, fl oz) and Metric (km, kg, cm, L) in Settings (defaults to Imperial).
+- **Customizable Dashboard**, reorder and show/hide metric tiles to personalize your Today view.
+- **Samsung Health (optional)**, choose to read directly from the Samsung Health app on-device instead of Health Connect, in Settings.
+- **Local AI Server (MCP, optional)**, opt-in loopback Model Context Protocol server to allow local LLMs/tools to inspect your health stats without cloud access.
 ## Tech
 
 - Kotlin, Jetpack Compose, Material 3 (dynamic color)
 - `androidx.health.connect:connect-client` and Samsung Health Data SDK for on-device reads
 - `androidx.glance` widgets, WorkManager for periodic refresh
-- DataStore for goals
+- DataStore for goals, layout, data source, and unit preferences
+- NanoHTTPD for optional local loopback MCP server
 - `minSdk 30`, `targetSdk 36`
 
 ## Build
 
 ```sh
-git clone https://github.com/GuyOnWifi/heartwood
+git clone https://github.com/Dazaike/heartwood
 cd heartwood
 ./gradlew :app:assembleDebug
 # APK: app/build/outputs/apk/debug/app-debug.apk
@@ -72,11 +75,10 @@ for the `fdroiddata` repo is in [docs/fdroid-metadata-template.yml](docs/fdroid-
 
 ## Privacy
 
-Heartwood requests only **read** permissions, holds no network permission, and never transmits
-data. You control which data types it can read from Health Connect at any time. The optional
-Samsung Health path talks only to the Samsung Health app on-device via its SDK, never the network,
-just like the Health Connect path.
-
+Heartwood requests only **read** permissions and never transmits data to any external server.
+You control which data types it can read at any time. The optional Samsung Health integration
+reads directly from the Samsung Health app on-device via its official SDK. The optional local AI
+server operates strictly over loopback (`localhost`), keeping all personal health records entirely on your device.
 ## License
 
 [GPL-3.0-or-later](LICENSE) © Eason Huang
