@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -45,6 +46,7 @@ import dev.easonhuang.heartwood.data.MetricDetail
 import dev.easonhuang.heartwood.data.UnitPreferences
 import dev.easonhuang.heartwood.data.MetricKind
 import dev.easonhuang.heartwood.data.RecordRow
+import dev.easonhuang.heartwood.HeartwoodApp
 import dev.easonhuang.heartwood.ui.DetailViewModel
 import dev.easonhuang.heartwood.ui.components.BarChart
 import dev.easonhuang.heartwood.ui.components.LineChart
@@ -57,9 +59,10 @@ fun DetailScreen(
     unitPrefs: UnitPreferences,
     onBack: () -> Unit,
 ) {
+    val app = LocalContext.current.applicationContext as HeartwoodApp
     val vm: DetailViewModel = viewModel(
         key = metric.key,
-        factory = DetailViewModel.factory(manager, metric, unitPrefs),
+        factory = DetailViewModel.factory(manager, metric, unitPrefs, app.samsungWake),
     )
     val detail by vm.detail.collectAsStateWithLifecycle()
     val refreshing by vm.refreshing.collectAsStateWithLifecycle()
@@ -75,7 +78,7 @@ fun DetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = vm::refresh) {
+                    IconButton(onClick = vm::userRefresh) {
                         if (refreshing) {
                             CircularProgressIndicator(Modifier.padding(4.dp), strokeWidth = 2.dp)
                         } else {
@@ -95,7 +98,7 @@ fun DetailScreen(
         }
         PullToRefreshBox(
             isRefreshing = refreshing,
-            onRefresh = vm::refresh,
+            onRefresh = vm::userRefresh,
             modifier = Modifier.fillMaxSize().padding(top = inner.calculateTopPadding()),
         ) {
             LazyColumn(

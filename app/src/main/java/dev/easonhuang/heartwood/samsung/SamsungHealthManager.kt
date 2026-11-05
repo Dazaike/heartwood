@@ -140,9 +140,7 @@ class SamsungHealthManager(private val context: Context) : HealthDataSource {
 
     override suspend fun exportRows(metric: Metric, days: Int, unitSystem: UnitSystem): List<SeriesPoint> = when {
         metric.isUnsupported() -> emptyList()
-        metric == Metric.HEART_RATE -> heartRateRows(minOf(days, 30)).map { point ->
-            SeriesPoint(point.timestamp(), point.float(DataType.HeartRateType.HEART_RATE), timeFmt.format(point.timestamp().atZone(zone)))
-        }
+        metric == Metric.HEART_RATE -> heartRateExportRows(minOf(days, 30))
         else -> series(metric, days, unitSystem)
     }
 
@@ -411,11 +409,42 @@ class SamsungHealthManager(private val context: Context) : HealthDataSource {
         days: Int,
     ): List<HealthDataPoint> {
         val start = LocalDate.now().minusDays(days.toLong()).atStartOfDay()
-        return store.readData(
-            builder.setLocalTimeFilter(LocalTimeFilter.of(start, LocalDateTime.now()))
-                .setOrdering(Ordering.DESC)
-                .build(),
-        ).dataList
+        return rowsBetween(builder, start, LocalDateTime.now())
+    }
+
+    private suspend fun rowsBetween(
+        builder: ReadDataRequest.DualTimeBuilder<HealthDataPoint>,
+        start: LocalDateTime,
+        end: LocalDateTime,
+    ): List<HealthDataPoint> = store.readData(
+        builder.setLocalTimeFilter(LocalTimeFilter.of(start, end))
+            .setOrdering(Ordering.DESC)
+            .build(),
+    ).dataList
+
+    /**
+     * Export-only heart rate: one read per day (a single multi-week read of per-second watch samples
+     * is what made export hang), each day reduced to 5-minute averages as it arrives.
+     */
+    private suspend fun heartRateExportRows(days: Int): List<SeriesPoint> {
+        val today = LocalDate.now()
+        val out = ArrayList<SeriesPoint>()
+        for (offset in days downTo 0) {
+            val day = today.minusDays(offset.toLong())
+            val end = if (offset == 0) LocalDateTime.now() else day.plusDays(1).atStartOfDay()
+            val points = rowsBetween(DataTypes.HEART_RATE.readDataRequestBuilder, day.atStartOfDay(), end)
+            points.groupBy { it.timestamp().epochSecond / HR_BUCKET_SECONDS }
+                .toSortedMap()
+                .forEach { (bucket, list) ->
+                    val instant = Instant.ofEpochSecond(bucket * HR_BUCKET_SECONDS)
+                    out += SeriesPoint(
+                        instant,
+                        list.map { it.float(DataType.HeartRateType.HEART_RATE) }.average().toFloat(),
+                        timeFmt.format(instant.atZone(zone)),
+                    )
+                }
+        }
+        return out
     }
 
     private fun HealthDataPoint.timestamp(): Instant = requireNotNull(endTime ?: startTime ?: updateTime)
@@ -466,6 +495,7 @@ class SamsungHealthManager(private val context: Context) : HealthDataSource {
     }
 
     private companion object {
+        const val HR_BUCKET_SECONDS = 300L
         const val UNSUPPORTED_PERMISSION = "samsung:unsupported"
         const val UNSUPPORTED_CAPTION = "Not available from Samsung Health"
         const val METERS_PER_KILOMETER = 1000f

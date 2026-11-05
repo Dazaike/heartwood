@@ -1,0 +1,4 @@
+- Samsung Health: refresh now wakes Samsung Health first so data is current
+- Export shows a progress dialog
+- Fixed export hanging on large Samsung Health heart-rate data
+- Health Connect reads now page through all records

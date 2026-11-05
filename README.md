@@ -1,34 +1,37 @@
 # Heartwood
 
-A private, **read-only** Android health-data viewer for [Health Connect](https://developer.android.com/health-connect)
-or, optionally, the Samsung Health app. Heartwood shows the health and fitness data already on
-your device, beautifully, and without sending a single byte anywhere.
+Your health data is already on your phone. Heartwood lets you see it without gifting it to an account system, an ad network, or a venture-backed "wellness platform" that will eventually email you about mindfulness.
 
-> No accounts. No network permission. No trackers. Just your data, on your device.
+Heartwood is a private, **read-only** Android viewer for [Health Connect](https://developer.android.com/health-connect) and, if you insist on Samsung's ecosystem, Samsung Health. It reads the data already on your device, renders it properly, and sends precisely none of it anywhere.
 
-## Features
+> No accounts. No network permission. No trackers. Your data stays on your device. Revolutionary, apparently.
 
-- **Today**, Material You cards for steps, heart rate, sleep, energy, distance, exercise,
-  SpO₂, weight, blood pressure and more, each with a sparkline.
-- **Detail views**, full charts, statistics and recent records per metric.
-- **Weekly summary**, daily averages vs. goals you set, with progress rings and
-  week-over-week trends.
-- **Home-screen widgets**, key metrics, dynamically themed (Glance + Material 3).
-- **Export & AI Share**, export data to CSV/JSON via file picker, or export formatted Markdown directly to your AI assistant of choice via the Android system share sheet.
-- **Unit System**, toggle between Imperial (miles, lbs, in, fl oz) and Metric (km, kg, cm, L) in Settings (defaults to Imperial).
-- **Customizable Dashboard**, reorder and show/hide metric tiles to personalize your Today view.
-- **Samsung Health (optional)**, choose to read directly from the Samsung Health app on-device instead of Health Connect, in Settings.
-- **Local AI Server (MCP, optional)**, opt-in loopback Model Context Protocol server to allow local LLMs/tools to inspect your health stats without cloud access.
-## Tech
+## What it does
 
-- Kotlin, Jetpack Compose, Material 3 (dynamic color)
+- **Today**, Material You cards for steps, heart rate, sleep, energy, distance, exercise, SpO₂, weight, blood pressure, and the other numbers your body generates while corporate wellness apps harvest metadata.
+- **Detail views**, charts, statistics, and recent records for every metric. Numbers, organized. A bold new concept.
+- **Weekly summary**, daily averages against goals, progress rings, and week-over-week trends. You set the goals; the app declines to invent a lifestyle for you.
+- **Home-screen widgets**, dynamically themed Glance + Material 3 widgets for the metrics worth seeing before you unlock your phone.
+- **Export & AI Share**, write CSV or JSON through Android's file picker, or share formatted Markdown directly with your AI assistant through the system share sheet. No bespoke cloud relay because that would be stupid.
+- **Unit system**, switch between Imperial (miles, lbs, in, fl oz) and Metric (km, kg, cm, L). Imperial is the default. Debate it with physics, not us.
+- **Customizable dashboard**, reorder metric tiles and hide the noise. Your Today view, not a product manager's.
+- **Samsung Health** *(optional)*, read directly from the Samsung Health app on-device instead of Health Connect.
+- **Local AI server (MCP)** *(optional)*, an opt-in loopback Model Context Protocol server for local LLMs and tools. `localhost` only. The cloud does not need your resting heart rate.
+
+## The boringly competent stack
+
+- Kotlin, Jetpack Compose, Material 3, dynamic color
 - `androidx.health.connect:connect-client` and Samsung Health Data SDK for on-device reads
-- `androidx.glance` widgets, WorkManager for periodic refresh
-- DataStore for goals, layout, data source, and unit preferences
-- NanoHTTPD for optional local loopback MCP server
+- `androidx.glance` widgets and WorkManager refreshes
+- DataStore for goals, dashboard layout, data source, and unit preferences
+- NanoHTTPD for the optional loopback MCP server
 - `minSdk 30`, `targetSdk 36`
 
-## Build
+No "AI-native health intelligence layer." Just native Android code reading local data like it was designed to.
+
+## Build it
+
+Clone the repository. Build the APK. Avoid downloading a random prebuilt binary from a forum run by a man named `APKMaster69`.
 
 ```sh
 git clone https://github.com/Dazaike/heartwood
@@ -37,20 +40,18 @@ cd heartwood
 # APK: app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Or with Nix (pins the whole toolchain):
+Or use Nix, which pins the toolchain so your build remains reproducible instead of becoming an archaeological dig six months from now:
 
 ```sh
 nix develop
 ./gradlew :app:assembleRelease
 ```
 
-Requires JDK 17 and the Android SDK (`platforms;android-36`, `build-tools;36.0.0`). The
-Gradle wrapper pins everything else. See [docs/REPRODUCIBLE.md](docs/REPRODUCIBLE.md) for the
-full reproducible-build toolchain and Nix notes.
+You need JDK 17 and the Android SDK (`platforms;android-36`, `build-tools;36.0.0`). Gradle pins the rest because manually reconstructing dependency versions is how people lose weekends. See [docs/REPRODUCIBLE.md](docs/REPRODUCIBLE.md) for the full reproducible-build setup and Nix notes.
 
-### Signing a release (optional)
+### Sign a release, if you must
 
-Create `keystore.properties` (gitignored) or set the matching `HEARTWOOD_*` env vars:
+Create `keystore.properties` (already gitignored) or provide the equivalent `HEARTWOOD_*` environment variables:
 
 ```properties
 storeFile=/path/to/release.jks
@@ -59,26 +60,23 @@ keyAlias=…
 keyPassword=…
 ```
 
-Without it, `assembleRelease` produces an unsigned APK, which is fine for F-Droid, since it
-signs its own builds.
+Without signing credentials, `assembleRelease` emits an unsigned APK. That is fine for F-Droid; it signs its own builds because supply-chain hygiene is not optional.
 
-## CI
+## CI, because hope is not a test strategy
 
-- **CI** (`.github/workflows/ci.yml`), builds + lints the debug APK on every push/PR.
-- **Release** (`.github/workflows/release.yml`), on a `v*` tag, builds the release APK
-  (signed if secrets are present) and attaches it to a GitHub Release.
+- **CI** (`.github/workflows/ci.yml`) builds and lints the debug APK on every push and pull request.
+- **Release** (`.github/workflows/release.yml`) builds the release APK for every `v*` tag, signs it when secrets exist, and attaches it to the GitHub Release.
 
 ## F-Droid
 
-Descriptions and changelogs live under `fastlane/metadata/android/en-US/`. A recipe template
-for the `fdroiddata` repo is in [docs/fdroid-metadata-template.yml](docs/fdroid-metadata-template.yml).
+Store descriptions and changelogs in `fastlane/metadata/android/en-US/`. The `fdroiddata` recipe template lives at [docs/fdroid-metadata-template.yml](docs/fdroid-metadata-template.yml). Follow it. F-Droid is not impressed by improvisation.
 
-## Privacy
+## Privacy: the entire point
 
-Heartwood requests only **read** permissions and never transmits data to any external server.
-You control which data types it can read at any time. The optional Samsung Health integration
-reads directly from the Samsung Health app on-device via its official SDK. The optional local AI
-server operates strictly over loopback (`localhost`), keeping all personal health records entirely on your device.
+Heartwood requests only **read** permissions. It never transmits data to an external server. You decide which types it can read and can revoke them whenever you like.
+
+The optional Samsung Health integration reads directly from Samsung Health through its official on-device SDK. The optional AI server listens strictly on loopback (`localhost`). Your personal health record stays on your device, where it belongs. The robots have standards.
+
 ## License
 
 [GPL-3.0-or-later](LICENSE) © Eason Huang

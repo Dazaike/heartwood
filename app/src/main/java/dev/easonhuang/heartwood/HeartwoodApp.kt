@@ -12,6 +12,7 @@ import dev.easonhuang.heartwood.mcp.McpServerPreferences
 import dev.easonhuang.heartwood.data.WidgetPreferences
 import dev.easonhuang.heartwood.data.UnitPreferences
 import dev.easonhuang.heartwood.samsung.SamsungHealthManager
+import dev.easonhuang.heartwood.samsung.SamsungHealthWake
 import dev.easonhuang.heartwood.widget.WidgetUpdateScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +22,7 @@ import kotlinx.coroutines.launch
 class HeartwoodApp : Application() {
     val healthConnect: HealthConnectManager by lazy { HealthConnectManager(this) }
     val samsungHealth: SamsungHealthManager by lazy { SamsungHealthManager(this) }
+    val samsungWake: SamsungHealthWake by lazy { SamsungHealthWake(this) }
     val dataSourcePrefs: DataSourcePreferences by lazy { DataSourcePreferences(this) }
     val goals: GoalsRepository by lazy { GoalsRepository(this) }
     val exporter: ExportManager by lazy { ExportManager(this, ::activeDataSource, goals, unitPrefs) }

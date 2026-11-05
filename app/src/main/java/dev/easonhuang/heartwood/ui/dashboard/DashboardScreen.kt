@@ -26,12 +26,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.easonhuang.heartwood.data.HealthDataSource
 import dev.easonhuang.heartwood.data.DashboardLayoutRepository
 import dev.easonhuang.heartwood.data.UnitPreferences
 import dev.easonhuang.heartwood.data.Metric
+import dev.easonhuang.heartwood.HeartwoodApp
 import dev.easonhuang.heartwood.ui.DashboardViewModel
 import dev.easonhuang.heartwood.ui.components.MetricCard
 
@@ -46,7 +48,8 @@ fun DashboardScreen(
     onManagePermissions: () -> Unit,
     onCustomize: () -> Unit,
 ) {
-    val vm: DashboardViewModel = viewModel(factory = DashboardViewModel.factory(manager, layoutRepo, unitPrefs))
+    val app = LocalContext.current.applicationContext as HeartwoodApp
+    val vm: DashboardViewModel = viewModel(factory = DashboardViewModel.factory(manager, layoutRepo, unitPrefs, app.samsungWake))
     val summaries by vm.summaries.collectAsStateWithLifecycle()
     val refreshing by vm.refreshing.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -60,7 +63,7 @@ fun DashboardScreen(
                     IconButton(onClick = onCustomize) {
                         Icon(Icons.Rounded.Tune, contentDescription = "Customize dashboard")
                     }
-                    IconButton(onClick = vm::refresh) {
+                    IconButton(onClick = vm::userRefresh) {
                         if (refreshing) {
                             CircularProgressIndicator(Modifier.padding(4.dp), strokeWidth = 2.dp)
                         } else {
@@ -79,7 +82,7 @@ fun DashboardScreen(
         }
         PullToRefreshBox(
             isRefreshing = refreshing,
-            onRefresh = vm::refresh,
+            onRefresh = vm::userRefresh,
             modifier = Modifier.fillMaxSize().padding(top = inner.calculateTopPadding()),
         ) {
             LazyVerticalGrid(

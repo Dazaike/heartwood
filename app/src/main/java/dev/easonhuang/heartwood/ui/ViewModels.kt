@@ -10,6 +10,7 @@ import dev.easonhuang.heartwood.data.Metric
 import dev.easonhuang.heartwood.data.MetricDetail
 import dev.easonhuang.heartwood.data.MetricSummary
 import dev.easonhuang.heartwood.data.UnitPreferences
+import dev.easonhuang.heartwood.samsung.SamsungHealthWake
 import dev.easonhuang.heartwood.data.UnitSystem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,6 +25,7 @@ class DashboardViewModel(
     private val manager: HealthDataSource,
     private val layoutRepo: DashboardLayoutRepository,
     private val unitPrefs: UnitPreferences,
+    private val samsungWake: SamsungHealthWake,
 ) : ViewModel() {
     private val _raw = MutableStateFlow<List<MetricSummary>?>(null)
 
@@ -49,9 +51,25 @@ class DashboardViewModel(
     fun refresh() {
         viewModelScope.launch {
             _refreshing.value = true
-            val system = unitPrefs.unitSystem.first()
-            _raw.value = manager.readDashboard(system)
-            _refreshing.value = false
+            try {
+                val system = unitPrefs.unitSystem.first()
+                _raw.value = manager.readDashboard(system)
+            } finally {
+                _refreshing.value = false
+            }
+        }
+    }
+
+    fun userRefresh() {
+        viewModelScope.launch {
+            _refreshing.value = true
+            try {
+                runCatching { samsungWake.wakeAndSettle() }
+                val system = unitPrefs.unitSystem.first()
+                _raw.value = manager.readDashboard(system)
+            } finally {
+                _refreshing.value = false
+            }
         }
     }
 
@@ -60,8 +78,9 @@ class DashboardViewModel(
             manager: HealthDataSource,
             layoutRepo: DashboardLayoutRepository,
             unitPrefs: UnitPreferences,
+            samsungWake: SamsungHealthWake,
         ) = viewModelFactory {
-            initializer { DashboardViewModel(manager, layoutRepo, unitPrefs) }
+            initializer { DashboardViewModel(manager, layoutRepo, unitPrefs, samsungWake) }
         }
     }
 }
@@ -70,6 +89,7 @@ class DetailViewModel(
     private val manager: HealthDataSource,
     private val metric: Metric,
     private val unitPrefs: UnitPreferences,
+    private val samsungWake: SamsungHealthWake,
 ) : ViewModel() {
     private val _detail = MutableStateFlow<MetricDetail?>(null)
     val detail = _detail.asStateFlow()
@@ -88,9 +108,25 @@ class DetailViewModel(
     fun refresh() {
         viewModelScope.launch {
             _refreshing.value = true
-            val system = unitPrefs.unitSystem.first()
-            _detail.value = manager.readDetail(metric, system)
-            _refreshing.value = false
+            try {
+                val system = unitPrefs.unitSystem.first()
+                _detail.value = manager.readDetail(metric, system)
+            } finally {
+                _refreshing.value = false
+            }
+        }
+    }
+
+    fun userRefresh() {
+        viewModelScope.launch {
+            _refreshing.value = true
+            try {
+                runCatching { samsungWake.wakeAndSettle() }
+                val system = unitPrefs.unitSystem.first()
+                _detail.value = manager.readDetail(metric, system)
+            } finally {
+                _refreshing.value = false
+            }
         }
     }
 
@@ -99,8 +135,9 @@ class DetailViewModel(
             manager: HealthDataSource,
             metric: Metric,
             unitPrefs: UnitPreferences,
+            samsungWake: SamsungHealthWake,
         ) = viewModelFactory {
-            initializer { DetailViewModel(manager, metric, unitPrefs) }
+            initializer { DetailViewModel(manager, metric, unitPrefs, samsungWake) }
         }
     }
 }

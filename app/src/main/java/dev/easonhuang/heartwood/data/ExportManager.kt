@@ -40,7 +40,10 @@ class ExportManager(
             val manager = dataSourceProvider()
             val system = unitPrefs.unitSystem.first()
             val sections = metrics.map { metric ->
-                metric to runCatching { manager.exportRows(metric, days, system) }.getOrDefault(emptyList())
+                val t0 = System.currentTimeMillis()
+                val rows = runCatching { manager.exportRows(metric, days, system) }.getOrDefault(emptyList())
+                android.util.Log.d("HeartwoodExport", "${metric.key}: ${rows.size} rows in ${System.currentTimeMillis() - t0}ms")
+                metric to if (format == ExportFormat.MARKDOWN) downsample(metric, rows) else rows
             }
             val total = sections.sumOf { it.second.size }
             context.contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { writer ->
@@ -72,7 +75,10 @@ class ExportManager(
             val manager = dataSourceProvider()
             val system = unitPrefs.unitSystem.first()
             val sections = metrics.map { metric ->
-                metric to runCatching { manager.exportRows(metric, days, system) }.getOrDefault(emptyList())
+                val t0 = System.currentTimeMillis()
+                val rows = runCatching { manager.exportRows(metric, days, system) }.getOrDefault(emptyList())
+                android.util.Log.d("HeartwoodExport", "${metric.key}: ${rows.size} rows in ${System.currentTimeMillis() - t0}ms")
+                metric to downsample(metric, rows)
             }
             val total = sections.sumOf { it.second.size }
             val cacheDir = File(context.cacheDir, "exports").apply { mkdirs() }
@@ -92,6 +98,16 @@ class ExportManager(
             val contentUri = FileProvider.getUriForFile(context, authority, file)
             contentUri to total
         }
+    }
+
+    /** Raw heart-rate samples can number in the hundreds of thousands; AI-chat Markdown gets 5-minute averages. */
+    private fun downsample(metric: Metric, points: List<SeriesPoint>): List<SeriesPoint> {
+        if (metric != Metric.HEART_RATE || points.size < 2000) return points
+        return points.groupBy { it.time.epochSecond / 300 }
+            .map { (bucket, list) ->
+                SeriesPoint(Instant.ofEpochSecond(bucket * 300), list.map { it.value }.average().toFloat(), list.first().label)
+            }
+            .sortedBy { it.time }
     }
 
     private fun writeCsv(writer: Appendable, sections: List<Pair<Metric, List<SeriesPoint>>>, system: UnitSystem = UnitSystem.IMPERIAL) {

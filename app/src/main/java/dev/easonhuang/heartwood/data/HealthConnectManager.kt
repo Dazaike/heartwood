@@ -339,10 +339,23 @@ class HealthConnectManager(private val context: Context) : HealthDataSource {
 
     // ---- Low-level reads -----------------------------------------------------------------------
 
-    private suspend fun read(type: KClass<out Record>, start: Instant, end: Instant): List<Record> =
-        client.readRecords(
-            ReadRecordsRequest(recordType = type, timeRangeFilter = TimeRangeFilter.between(start, end))
-        ).records
+    private suspend fun read(type: KClass<out Record>, start: Instant, end: Instant): List<Record> {
+        val out = mutableListOf<Record>()
+        var token: String? = null
+        do {
+            val resp = client.readRecords(
+                ReadRecordsRequest(
+                    recordType = type,
+                    timeRangeFilter = TimeRangeFilter.between(start, end),
+                    pageSize = 5000,
+                    pageToken = token,
+                )
+            )
+            out += resp.records
+            token = resp.pageToken.takeIf { resp.records.isNotEmpty() }
+        } while (token != null)
+        return out
+    }
 
     private fun daysAgoStart(n: Int): Instant =
         LocalDate.now().minusDays(n.toLong()).atStartOfDay(zone).toInstant()

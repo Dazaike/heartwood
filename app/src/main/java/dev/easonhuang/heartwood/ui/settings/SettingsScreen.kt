@@ -28,6 +28,7 @@ import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.SmartToy
 import androidx.compose.material.icons.rounded.Widgets
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -99,6 +100,7 @@ fun SettingsScreen(
     val snackbar = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     var showExportDialog by remember { mutableStateOf(false) }
+    var exporting by remember { mutableStateOf(false) }
     var showIntervalDialog by remember { mutableStateOf(false) }
     var grantedMetrics by remember { mutableStateOf<List<Metric>>(emptyList()) }
 
@@ -109,7 +111,9 @@ fun SettingsScreen(
         if (metrics.isEmpty()) {
             snackbar.showSnackbar("No accessible data to export"); return
         }
-        exporter.export(uri, metrics, format, days).fold(
+        exporting = true
+        val result = try { exporter.export(uri, metrics, format, days) } finally { exporting = false }
+        result.fold(
             onSuccess = { count -> snackbar.showSnackbar("Exported $count records as ${format.label}") },
             onFailure = { snackbar.showSnackbar("Export failed: ${it.message}") },
         )
@@ -119,7 +123,9 @@ fun SettingsScreen(
         if (metrics.isEmpty()) {
             snackbar.showSnackbar("No accessible data to export"); return
         }
-        exporter.exportMarkdownToCache(metrics, days).fold(
+        exporting = true
+        val result = try { exporter.exportMarkdownToCache(metrics, days) } finally { exporting = false }
+        result.fold(
             onSuccess = { (contentUri, count) ->
                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
                     type = ExportFormat.MARKDOWN.mime
@@ -381,6 +387,19 @@ fun SettingsScreen(
                 )
             }
         }
+    }
+
+    if (exporting) {
+        AlertDialog(
+            onDismissRequest = {},
+            confirmButton = {},
+            text = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(Modifier.size(28.dp), strokeWidth = 3.dp)
+                    Text("Preparing export…", Modifier.padding(start = 16.dp))
+                }
+            },
+        )
     }
 
     if (showExportDialog) {
